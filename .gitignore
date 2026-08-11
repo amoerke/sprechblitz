@@ -1,0 +1,18 @@
+# Node
+node_modules/
+dist/
+*.log
+
+# Rust / Tauri
+client/src-tauri/target/
+client/src-tauri/gen/
+
+# Env & Secrets
+.env
+.env.local
+*.key
+!*.pub.key
+
+# OS
+.DS_Store
+Thumbs.db

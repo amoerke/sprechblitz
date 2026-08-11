@@ -1,0 +1,94 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+  font-size: 14px;
+  background: #f4f4f6;
+  color: #1c1c21;
+}
+
+@media (prefers-color-scheme: dark) {
+  body { background: #1b1b1f; color: #e4e4e8; }
+  section { background: #242429 !important; }
+  input, select { background: #1b1b1f; color: #e4e4e8; border-color: #3a3a42 !important; }
+  footer { background: #1b1b1f; }
+}
+
+main { max-width: 560px; margin: 0 auto; padding: 16px 20px 80px; }
+
+h1 { font-size: 18px; margin: 4px 0 12px; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: #888; margin: 0 0 10px; }
+
+section {
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+
+label { display: block; margin-bottom: 10px; font-weight: 500; }
+label input:not([type="checkbox"]), label select {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 7px 9px;
+  border: 1px solid #d4d4dc;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 400;
+}
+label.check { display: flex; align-items: center; gap: 8px; font-weight: 400; }
+
+.row { display: flex; align-items: center; gap: 10px; }
+
+button {
+  font: inherit;
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid #c9c9d2;
+  background: #fff;
+  cursor: pointer;
+}
+button:hover { background: #f0f0f4; }
+button.primary { background: #3563e9; border-color: #3563e9; color: #fff; }
+button.primary:hover { background: #2b53c7; }
+button.subtle { border: none; background: none; color: #888; padding: 4px 0; }
+
+footer {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: #f4f4f6;
+  border-top: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+#connection-status, #save-status { font-size: 13px; color: #888; }
+#connection-status.ok, #save-status.ok { color: #2e9e44; }
+#connection-status.err, #save-status.err { color: #d43d3d; }
+
+#history { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.history-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.history-entry .text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: inherit;
+}
+.history-entry button { padding: 3px 8px; font-size: 12px; }
+.history-empty { color: #888; font-size: 13px; }
+
+#hotkey:focus { outline: 2px solid #3563e9; background: #eef2ff; }
+@media (prefers-color-scheme: dark) {
+  #hotkey:focus { background: #26304d; }
+}

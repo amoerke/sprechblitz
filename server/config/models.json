@@ -1,0 +1,8 @@
+{
+  "default": "gpt-4o-mini-transcribe",
+  "models": [
+    { "id": "gpt-4o-mini-transcribe", "label": "GPT-4o mini Transcribe (schnell, günstig)" },
+    { "id": "gpt-4o-transcribe", "label": "GPT-4o Transcribe (beste Qualität)" },
+    { "id": "whisper-1", "label": "Whisper v2 (Klassiker)" }
+  ]
+}

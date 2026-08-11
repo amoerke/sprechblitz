@@ -1,0 +1,13 @@
+{
+  "language": "de",
+  "rules": [
+    { "phrase": "neuer Absatz", "replace": "\n\n" },
+    { "phrase": "neue Zeile", "replace": "\n" },
+    { "phrase": "Anführungszeichen Ende", "replace": "“" },
+    { "phrase": "Anführungszeichen", "replace": " „" },
+    { "phrase": "in Klammern", "replace": " (" },
+    { "phrase": "Klammer zu", "replace": ") " },
+    { "phrase": "Doppelpunkt", "replace": ": " },
+    { "phrase": "Bindestrich", "replace": "-" }
+  ]
+}

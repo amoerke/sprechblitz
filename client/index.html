@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SprechBlitz – Einstellungen</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <main>
+      <h1>⚡ SprechBlitz</h1>
+
+      <section>
+        <h2>Verbindung</h2>
+        <label>
+          Server-URL
+          <input id="server-url" type="url" placeholder="https://diktat.example.de" />
+        </label>
+        <label>
+          Zugangs-Token
+          <input id="token" type="password" autocomplete="off" />
+        </label>
+        <div class="row">
+          <button id="test-connection" type="button">Verbindung testen</button>
+          <span id="connection-status"></span>
+        </div>
+      </section>
+
+      <section>
+        <h2>Diktat</h2>
+        <label>
+          Modell
+          <select id="model"></select>
+        </label>
+        <label>
+          Sprache
+          <select id="language">
+            <option value="de">Deutsch</option>
+            <option value="en">Englisch</option>
+            <option value="auto">Automatisch</option>
+          </select>
+        </label>
+        <label>
+          Aufnahme-Modus
+          <select id="mode">
+            <option value="toggle">Umschalten (Drücken startet/stoppt)</option>
+            <option value="ptt">Push-to-talk (Halten)</option>
+          </select>
+        </label>
+        <label>
+          Hotkey
+          <input id="hotkey" type="text" readonly placeholder="Klicken und Kombination drücken" />
+        </label>
+        <label class="check">
+          <input id="commands" type="checkbox" />
+          Sprachbefehle („neue Zeile“, „neuer Absatz“ …)
+        </label>
+        <label class="check">
+          <input id="sounds" type="checkbox" />
+          Start/Stopp-Töne
+        </label>
+        <label>
+          Auto-Stopp nach (Sekunden)
+          <input id="max-seconds" type="number" min="30" max="1800" step="30" />
+        </label>
+      </section>
+
+      <section>
+        <h2>System</h2>
+        <label>
+          Mikrofon
+          <select id="mic"></select>
+        </label>
+        <label class="check">
+          <input id="autostart" type="checkbox" />
+          Mit dem System starten
+        </label>
+        <label class="check">
+          <input id="history-enabled" type="checkbox" />
+          Verlauf lokal speichern (letzte 20)
+        </label>
+      </section>
+
+      <section>
+        <h2>Verlauf</h2>
+        <div id="history"></div>
+        <button id="clear-history" type="button" class="subtle">Verlauf löschen</button>
+      </section>
+
+      <footer>
+        <span id="save-status"></span>
+        <button id="save" type="button" class="primary">Speichern</button>
+      </footer>
+    </main>
+    <script type="module" src="/src/settings.ts"></script>
+  </body>
+</html>

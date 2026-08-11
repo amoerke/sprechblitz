@@ -1,0 +1,32 @@
+[package]
+name = "sprechblitz"
+version = "0.1.0"
+description = "Diktier-App – Hotkey drücken, sprechen, Text erscheint am Cursor"
+authors = ["André Mörke"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon", "image-png", "macos-private-api"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["time"] }
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-autostart = "2"
+tauri-plugin-notification = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-updater = "2"
+cpal = "0.15"
+hound = "3.5"
+arboard = "3"
+enigo = "0.2"
+rodio = { version = "0.19", default-features = false }
+reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls"] }
+chrono = "0.4"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

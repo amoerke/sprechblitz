@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { background: transparent; overflow: hidden; height: 100%; }
+      body {
+        font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+        display: flex; align-items: flex-start; justify-content: center;
+        cursor: pointer; user-select: none;
+      }
+      #pill {
+        display: flex; align-items: center; gap: 10px;
+        background: rgba(24, 24, 28, 0.92);
+        color: #eee; border-radius: 24px;
+        padding: 10px 18px; margin-top: 4px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+        min-width: 280px; max-width: 360px;
+      }
+      #dot {
+        width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+        background: #e5484d;
+      }
+      .recording #dot { animation: pulse 1.2s ease-in-out infinite; }
+      @keyframes pulse { 50% { opacity: 0.35; } }
+      .transcribing #dot { background: #f5a623; animation: spin-pulse 0.8s linear infinite; }
+      @keyframes spin-pulse { 50% { opacity: 0.3; } }
+      .error #dot { background: #e5484d; }
+      #label { font-size: 13px; white-space: nowrap; }
+      #hint { font-size: 11px; color: #999; white-space: nowrap; }
+      #meter {
+        flex: 1; height: 6px; border-radius: 3px;
+        background: rgba(255, 255, 255, 0.12); overflow: hidden; min-width: 60px;
+      }
+      #meter-fill {
+        height: 100%; width: 0%;
+        background: linear-gradient(90deg, #4caf50, #ffc107);
+        transition: width 90ms linear;
+      }
+      .transcribing #meter, .error #meter { visibility: hidden; }
+      .error #hint { display: none; }
+    </style>
+  </head>
+  <body>
+    <div id="pill" class="recording">
+      <div id="dot"></div>
+      <div>
+        <div id="label">Aufnahme …</div>
+        <div id="hint">Klick oder Esc bricht ab</div>
+      </div>
+      <div id="meter"><div id="meter-fill"></div></div>
+    </div>
+    <script type="module" src="/src/overlay.ts"></script>
+  </body>
+</html>
