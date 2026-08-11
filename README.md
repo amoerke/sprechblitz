@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="client/src-tauri/icons/128x128.png" alt="SprechBlitz-Icon" width="96" height="96" />
+</p>
+
 # SprechBlitz
 
 Diktier-App: Hotkey drücken, sprechen, Text erscheint an der Cursorposition der aktiven App.
