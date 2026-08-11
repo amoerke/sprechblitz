@@ -1,4 +1,4 @@
-# SprechBlitz – Release-Build in einem Schritt.
+﻿# SprechBlitz – Release-Build in einem Schritt.
 #
 #   .\build-release.ps1            → Release + NSIS-Installer + signierte Updater-Artefakte
 #   .\build-release.ps1 -Debug     → schneller Debug-Build ohne Installer/Signierung
