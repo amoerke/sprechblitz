@@ -18,9 +18,20 @@ Beim ersten Start öffnet sich das Einstellungsfenster: Server-URL und Zugangs-T
 
 ## Release-Build
 
-```sh
-# Updater-Artefakte werden signiert – Schlüssel liegt im Repo-Root (nicht eingecheckt!)
-$env:TAURI_SIGNING_PRIVATE_KEY_PATH = "..\..\updater-signing.key"   # PowerShell
+Am einfachsten per Buildscript (fragt das Schlüssel-Passwort ab, richtet PATH selbst ein):
+
+```powershell
+cd client
+.\build-release.ps1            # Release + Installer + signierte Updater-Artefakte
+.\build-release.ps1 -Debug     # schneller Debug-Build ohne Installer
+```
+
+Manuell entspricht das:
+
+```powershell
+$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"
+$env:TAURI_SIGNING_PRIVATE_KEY = Get-Content "..\updater-signing.key" -Raw
+$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = "<Schlüssel-Passwort>"   # darf nicht leer sein
 npm run tauri build
 ```
 
