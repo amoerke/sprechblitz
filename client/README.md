@@ -14,6 +14,8 @@ npm run tauri dev
 
 Beim ersten Start öffnet sich das Einstellungsfenster: Server-URL und Zugangs-Token eintragen, „Verbindung testen“, speichern.
 
+**Achtung Build-Falle:** Ein lauffähiges Binary immer über das Tauri-CLI bauen (`npm run tauri dev` oder `npx tauri build --debug --no-bundle`). Ein pures `cargo build` in `src-tauri/` erzeugt ein Binary, das die UI vom Vite-Dev-Server (`localhost:1420`) erwartet – ohne laufenden Dev-Server bleiben alle Fenster leer.
+
 ## Release-Build
 
 ```sh

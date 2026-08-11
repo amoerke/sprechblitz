@@ -23,6 +23,14 @@ export interface AppConfig {
   maxUploadBytes: number;
 }
 
+// Load ./.env if present (local development; in Docker/Coolify the
+// environment comes from the platform). Does not override existing vars.
+try {
+  process.loadEnvFile();
+} catch {
+  // no .env file – fine
+}
+
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) {

@@ -27,6 +27,18 @@ pub fn notify(app: &AppHandle, body: &str) {
 
 // --- Global shortcut dispatch ------------------------------------------------
 
+/// Runs an action on the main thread AFTER the shortcut handler has returned.
+/// The plugin holds its internal shortcuts mutex while invoking the handler, so
+/// calling register/unregister synchronously from here deadlocks the main
+/// thread. Deferring through the async runtime releases that lock first.
+fn run_deferred(app: &AppHandle, action: fn(&AppHandle)) {
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        let handle = app.clone();
+        let _ = app.run_on_main_thread(move || action(&handle));
+    });
+}
+
 pub fn on_shortcut(app: &AppHandle, shortcut: &Shortcut, event: ShortcutEvent) {
     let state = app.state::<AppState>();
     let (hotkey, mode) = {
@@ -36,7 +48,7 @@ pub fn on_shortcut(app: &AppHandle, shortcut: &Shortcut, event: ShortcutEvent) {
 
     if *shortcut == escape_shortcut() {
         if event.state() == ShortcutState::Pressed {
-            cancel(app);
+            run_deferred(app, cancel);
         }
         return;
     }
@@ -49,8 +61,8 @@ pub fn on_shortcut(app: &AppHandle, shortcut: &Shortcut, event: ShortcutEvent) {
     }
 
     match (mode, event.state()) {
-        (Mode::Ptt, ShortcutState::Pressed) => start(app),
-        (Mode::Ptt, ShortcutState::Released) => stop_and_transcribe(app),
+        (Mode::Ptt, ShortcutState::Pressed) => run_deferred(app, start),
+        (Mode::Ptt, ShortcutState::Released) => run_deferred(app, stop_and_transcribe),
         (Mode::Toggle, ShortcutState::Pressed) => {
             // Guard against OS key-repeat double toggles.
             let mut last = state.last_toggle.lock().unwrap();
@@ -59,7 +71,7 @@ pub fn on_shortcut(app: &AppHandle, shortcut: &Shortcut, event: ShortcutEvent) {
             }
             *last = Instant::now();
             drop(last);
-            toggle(app);
+            run_deferred(app, toggle);
         }
         _ => {}
     }
@@ -104,7 +116,9 @@ pub fn start(app: &AppHandle) {
         sound::play(sound::Cue::Start);
     }
     show_overlay(app, "recording", None);
-    let _ = app.global_shortcut().register(escape_shortcut());
+    if let Err(e) = app.global_shortcut().register(escape_shortcut()) {
+        eprintln!("[shortcut] Esc-Registrierung fehlgeschlagen: {e}");
+    }
     tray::rebuild(app);
 
     // Safety auto-stop: a forgotten open microphone stops itself.
