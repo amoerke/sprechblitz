@@ -1,0 +1,22 @@
+services:
+  sprechblitz-server:
+    build: .
+    container_name: sprechblitz-server
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8790}:8790"
+    environment:
+      # Pflicht – kommen lokal aus server/.env (Compose-Interpolation),
+      # im Deployment aus der Plattform (Coolify)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY fehlt}
+      AUTH_TOKENS: ${AUTH_TOKENS:?AUTH_TOKENS fehlt (Format name:token,name2:token2)}
+      # Optional
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-31457280}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8790/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
