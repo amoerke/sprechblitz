@@ -64,6 +64,11 @@ Verlauf an, Auto-Stopp nach 300 s.
    ANSI und stolpert über Umlaute/Sonderzeichen.
 5. `Session`-Übergänge laufen ausschließlich über `dictation.rs`; das `generation`-Feld verhindert,
    dass ein alter Auto-Stopp-Timer eine neue Aufnahme abwürgt.
+6. **Das Einfügen (`paste::insert_text`) muss auf dem Main-Thread laufen.** enigo ruft auf macOS
+   TIS-APIs (`TISCopyCurrentKeyboardInputSource`) auf; macOS 14+ bricht den Prozess bei Aufruf von
+   einem anderen Thread sofort ab (Dispatch-Queue-Assertion) – die App verschwindet kommentarlos
+   nach der Transkription. Deshalb `run_on_main_thread` + Oneshot-Channel in `dictation.rs`,
+   kein `spawn_blocking`.
 
 ---
 
@@ -111,6 +116,14 @@ cd client
 .\release.ps1 -Version 0.1.1 # Version setzen → bauen → latest.json → GitHub-Release
 ```
 
+macOS-Pendants: `./build-release.sh` / `./build-release.sh --debug` und `./release.sh 0.1.1`.
+
+- **Windows- und Mac-Releases laufen unabhängig**: Existiert das Release `v<Version>` schon,
+  lädt das jeweilige Release-Skript die vorhandene `latest.json` herunter, ergänzt nur den
+  eigenen Plattform-Eintrag (`gh release upload --clobber`) und lässt die anderen stehen.
+  Übernommen werden dabei nur Einträge **derselben** Version – sonst würde der Updater einen
+  alten Build unter neuer Versionsnummer ausliefern.
+
 - Signaturschlüssel: `updater-signing.key` im Repo-Root, **gitignored** (`*.key`), **passwortgeschützt**.
   Das Passwort ist Pflicht – ein passwortloser Schlüssel funktioniert unter Windows nicht, weil
   PowerShell keine leeren Env-Variablen setzen kann (`fe6b798`).
@@ -125,9 +138,10 @@ cd client
 
 - 9 Commits, letzter `c358fe7` (docker-compose). **Keine Git-Tags, kein GitHub-Release** – v0.1.0
   ist noch nicht veröffentlicht, der Updater-Pfad also noch nie end-to-end gelaufen.
-- **macOS ist ungetestet.** Ziel des Projekts war „zuerst Mac", entwickelt und gebaut wurde bisher
-  ausschließlich unter Windows. `release.ps1` erzeugt `latest.json` nur für `windows-x86_64`; für
-  macOS fehlen `darwin-aarch64`/`darwin-x86_64`, Signierung/Notarisierung und ein Build auf Mac-Hardware.
+- **macOS in Arbeit** (seit 2026-08-16): Dev-Build läuft auf Apple Silicon, Paste-Crash behoben
+  (Invariante 6), `build-release.sh`/`release.sh` vorhanden (`darwin-aarch64` via `uname -m`).
+  Es fehlen noch: Signierung/Notarisierung (Gatekeeper-Rechtsklick-Workaround nötig) und ein
+  End-to-End-Test des Release-/Updater-Pfads auf beiden Plattformen.
 - Nur `commands.de.json` existiert; `commands.en.json` fehlt (bei `language=en` greifen keine Befehle).
 - Keine automatisierten Tests, keine CI.
 - `.claude/settings.local.json` ist untracked – bewusst so lassen oder ignorieren.
