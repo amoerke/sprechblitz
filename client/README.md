@@ -4,7 +4,41 @@ Tauri-2-App für macOS (Menüleiste) und Windows (Infobereich). Globaler Hotkey 
 
 ## Entwicklung
 
-Voraussetzungen: Node ≥ 22, Rust (stable), unter Windows die MSVC Build Tools.
+Voraussetzungen: Node ≥ 22, Rust (stable), unter Windows die MSVC Build Tools, unter macOS die
+Xcode Command Line Tools (`xcode-select --install`).
+
+### Rust installieren
+
+Das Tauri-CLI ruft beim Bauen `cargo` auf – Rust muss deshalb global installiert sein (empfohlen
+über [rustup](https://rustup.rs), den offiziellen Installer):
+
+**macOS / Linux:**
+
+```sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+Der Installer richtet `~/.cargo/bin` im PATH ein (Eintrag in `~/.zshenv` bzw. `~/.profile`).
+Danach ein neues Terminal öffnen oder einmalig `source "$HOME/.cargo/env"` ausführen.
+
+**Windows:**
+
+```powershell
+winget install Rustlang.Rustup
+```
+
+(alternativ `rustup-init.exe` von [rustup.rs](https://rustup.rs) laden). Rustup installiert die
+MSVC-Toolchain-Anbindung; die MSVC Build Tools selbst kommen über den Visual Studio Installer
+(Workload „Desktopentwicklung mit C++").
+
+**Prüfen:**
+
+```sh
+rustc --version   # z. B. rustc 1.97.1
+cargo --version
+```
+
+### Starten
 
 ```sh
 cd client
@@ -24,6 +58,14 @@ Am einfachsten per Buildscript (fragt das Schlüssel-Passwort ab, richtet PATH s
 cd client
 .\build-release.ps1            # Release + Installer + signierte Updater-Artefakte
 .\build-release.ps1 -Debug     # schneller Debug-Build ohne Installer
+```
+
+Unter macOS entsprechend:
+
+```sh
+cd client
+./build-release.sh             # Release + .app/.dmg + signierte Updater-Artefakte
+./build-release.sh --debug     # schneller Debug-Build ohne Bundle
 ```
 
 Manuell entspricht das:

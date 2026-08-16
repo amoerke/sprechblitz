@@ -239,11 +239,17 @@ async fn transcribe_and_paste(app: AppHandle, pending: PendingDictation) {
 
     match result {
         Ok(text) if !text.trim().is_empty() => {
-            let paste_result = tauri::async_runtime::spawn_blocking({
-                let text = text.clone();
-                move || paste::insert_text(&text)
-            })
-            .await;
+            // enigo queries the keyboard layout via TIS APIs, which macOS 14+
+            // only allows on the main thread — off it the process is aborted.
+            let (tx, rx) = tokio::sync::oneshot::channel();
+            let paste_text = text.clone();
+            let dispatched = app.run_on_main_thread(move || {
+                let _ = tx.send(paste::insert_text(&paste_text));
+            });
+            let paste_result = match dispatched {
+                Ok(()) => rx.await.map_err(|e| e.to_string()),
+                Err(e) => Err(e.to_string()),
+            };
             match paste_result {
                 Ok(Ok(())) => {}
                 Ok(Err(e)) => notify(&app, &e),
