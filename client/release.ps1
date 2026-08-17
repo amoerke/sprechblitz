@@ -24,6 +24,20 @@ if ($Version -notmatch '^\d+\.\d+\.\d+$') {
 }
 if (-not $Notes) { $Notes = "SprechBlitz $Version" }
 
+# Preflight: fehlendes oder nicht eingeloggtes gh soll VOR dem Build auffallen –
+# der Upload ist der letzte Schritt, ein Abbruch dort kostet einen ganzen Build.
+if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
+    throw "gh CLI nicht gefunden – bitte installieren: winget install GitHub.cli"
+}
+$eapBefore = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+gh auth status *> $null
+$ghAuthed = ($LASTEXITCODE -eq 0)
+$ErrorActionPreference = $eapBefore
+if (-not $ghAuthed) {
+    throw "gh ist nicht eingeloggt – bitte zuerst 'gh auth login' ausführen"
+}
+
 # --- Version in tauri.conf.json setzen (Formatierung bleibt erhalten) ---
 $confPath = "src-tauri\tauri.conf.json"
 $conf = Get-Content $confPath -Raw

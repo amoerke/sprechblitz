@@ -23,6 +23,17 @@ if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 fi
 [ -n "$NOTES" ] || NOTES="SprechBlitz $VERSION"
 
+# Preflight: fehlendes oder nicht eingeloggtes gh soll VOR dem Build auffallen –
+# der Upload ist der letzte Schritt, ein Abbruch dort kostet einen ganzen Build.
+if ! command -v gh >/dev/null 2>&1; then
+    echo "gh CLI nicht gefunden – bitte installieren: brew install gh" >&2
+    exit 1
+fi
+if ! gh auth status >/dev/null 2>&1; then
+    echo "gh ist nicht eingeloggt – bitte zuerst 'gh auth login' ausführen" >&2
+    exit 1
+fi
+
 case "$(uname -m)" in
     arm64)  ARCH="aarch64"; PLATFORM="darwin-aarch64" ;;
     x86_64) ARCH="x64";     PLATFORM="darwin-x86_64" ;;
