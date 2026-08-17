@@ -4217,6 +4217,7 @@ version = "0.1.0"
 dependencies = [
  "arboard",
  "chrono",
+ "core-foundation 0.10.1",
  "cpal",
  "enigo",
  "hound",

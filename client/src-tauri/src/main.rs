@@ -64,6 +64,13 @@ fn main() {
                 dictation::notify(&handle, &e);
             }
 
+            // Ask for the Accessibility permission up front – without it the
+            // paste is dropped silently, and every rebuild revokes the grant.
+            #[cfg(target_os = "macos")]
+            if !paste::accessibility::is_trusted(true) {
+                dictation::notify(&handle, paste::accessibility::MISSING_HINT);
+            }
+
             let autolaunch = handle.autolaunch();
             let _ = if app_settings.autostart {
                 autolaunch.enable()
