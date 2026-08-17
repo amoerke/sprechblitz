@@ -69,6 +69,15 @@ Verlauf an, Auto-Stopp nach 300 s.
    einem anderen Thread sofort ab (Dispatch-Queue-Assertion) – die App verschwindet kommentarlos
    nach der Transkription. Deshalb `run_on_main_thread` + Oneshot-Channel in `dictation.rs`,
    kein `spawn_blocking`.
+7. **Bleibt der Text nach dem Transkribieren aus, ist fast immer die macOS-Berechtigung
+   „Bedienungshilfen" schuld.** Sie hängt an der Code-Signatur des Binaries; da sowohl Dev-Build
+   als auch Bundle nur ad-hoc/linker-signiert sind (`security find-identity` → 0 Identitäten),
+   erzeugt **jeder Neubau einen neuen CDHash** und entwertet die Freigabe – der Eintrag in den
+   Systemeinstellungen bleibt dabei sichtbar und angehakt. enigo 0.2 prüft die Berechtigung nicht,
+   `CGEventPost` verschluckt die Tasten still, `insert_text` meldete früher Erfolg. Deshalb prüft
+   `paste::accessibility::is_trusted()` jetzt vor dem Einfügen und beim Start. Heilung: Eintrag
+   entfernen und neu hinzufügen. Dev-Binary (`target/debug/sprechblitz`) und `/Applications/
+   SprechBlitz.app` sind **getrennte** TCC-Identitäten und brauchen je eine eigene Freigabe.
 
 ---
 
