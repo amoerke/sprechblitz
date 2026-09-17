@@ -4,6 +4,7 @@ import { loadConfig, loadModelsConfig } from "./config.js";
 import { authenticate } from "./auth.js";
 import { loadCommands, applyCommands } from "./commands.js";
 import { transcribe, UpstreamError } from "./transcribe.js";
+import { parseMeal, parseWorkout, ParseUpstreamError } from "./parse.js";
 
 const config = loadConfig();
 const modelsConfig = loadModelsConfig(config.modelsConfigPath);
@@ -109,6 +110,46 @@ app.post("/v1/transcribe", async (request, reply) => {
 
   return { text, model };
 });
+
+// --- kraft.: Transkript → strukturiertes Workout / Mahlzeit ---
+interface ParseBody {
+  text?: unknown;
+  now?: unknown;
+}
+
+function readParseBody(body: unknown): { text: string; now: string } | null {
+  const b = (body ?? {}) as ParseBody;
+  if (typeof b.text !== "string" || !b.text.trim()) return null;
+  if (b.text.length > 20_000) return null;
+  const now = typeof b.now === "string" && !Number.isNaN(Date.parse(b.now)) ? b.now : new Date().toISOString();
+  return { text: b.text, now };
+}
+
+for (const kind of ["workout", "meal"] as const) {
+  app.post(`/v1/parse-${kind}`, async (request, reply) => {
+    const started = Date.now();
+    const input = readParseBody(request.body);
+    if (!input) {
+      return reply.code(400).send({ error: "expected json body { text: string, now?: iso-string }" });
+    }
+    const options = { apiKey: config.openaiApiKey, baseUrl: config.openaiBaseUrl, model: config.parseModel, ...input };
+    try {
+      const result = kind === "workout" ? await parseWorkout(options) : await parseMeal(options);
+      // Metadata-only logging: never log transcript content.
+      request.log.info(
+        { token: request.tokenName, kind, model: config.parseModel, textChars: input.text.length, durationMs: Date.now() - started },
+        "parse completed"
+      );
+      return result;
+    } catch (error) {
+      if (error instanceof ParseUpstreamError) {
+        request.log.error({ status: error.status, upstreamBody: error.body }, "openai parse request failed");
+        return reply.code(502).send({ error: "parsing service failed" });
+      }
+      throw error;
+    }
+  });
+}
 
 app.setErrorHandler((error: FastifyError, request, reply) => {
   request.log.error(error);

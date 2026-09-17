@@ -8,9 +8,13 @@ Zustandsloser Transkriptions-Proxy: nimmt WAV-Audio vom Client entgegen, ruft di
 |---------|------------------|--------|--------------|
 | GET     | `/health`        | nein   | Liveness-Check |
 | GET     | `/v1/models`     | Bearer | Verfügbare Modelle + Default |
-| POST    | `/v1/transcribe` | Bearer | Multipart: `file` (WAV), Felder `model`, `language` (`de`/`en`/`auto`), `commands` (`1`/`0`) → `{ "text": "…" }` |
+| POST    | `/v1/transcribe` | Bearer | Multipart: `file` (WAV, M4A, MP3 – alles, was die OpenAI Audio API annimmt), Felder `model`, `language` (`de`/`en`/`auto`), `commands` (`1`/`0`) → `{ "text": "…" }` |
+| POST    | `/v1/parse-workout` | Bearer | JSON `{ "text": "…", "now": "<ISO>" }` → strukturiertes Workout (Titel, Muskelgruppen, Übungen mit Sätzen/Wdh./kg, Unklarheiten) – für die kraft.-App |
+| POST    | `/v1/parse-meal` | Bearer | JSON `{ "text": "…", "now": "<ISO>" }` → Mahlzeit mit geschätzten kcal/Makros und Mahlzeit-Typ – für die kraft.-App |
 
 Auth: `Authorization: Bearer <token>` – Tokens sind benannt und einzeln widerrufbar (`AUTH_TOKENS`, siehe `.env.example`).
+
+Die Parse-Endpunkte nutzen OpenAI Chat Completions mit Structured Outputs; das Modell ist über `PARSE_MODEL` konfigurierbar (Default `gpt-4o-mini`). Geloggt werden auch hier nur Metadaten.
 
 ## Lokal entwickeln
 

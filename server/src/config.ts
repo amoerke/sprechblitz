@@ -21,6 +21,8 @@ export interface AppConfig {
   modelsConfigPath: string;
   commandsConfigDir: string;
   maxUploadBytes: number;
+  /** Chat model for the kraft. parse endpoints */
+  parseModel: string;
 }
 
 // Load ./.env if present (local development; in Docker/Coolify the
@@ -72,6 +74,7 @@ export function loadConfig(): AppConfig {
     modelsConfigPath: resolve(process.env.MODELS_CONFIG ?? "config/models.json"),
     commandsConfigDir: resolve(process.env.COMMANDS_CONFIG_DIR ?? "config"),
     maxUploadBytes: Number(process.env.MAX_UPLOAD_BYTES ?? 30 * 1024 * 1024),
+    parseModel: process.env.PARSE_MODEL ?? "gpt-4o-mini",
   };
 }
 
