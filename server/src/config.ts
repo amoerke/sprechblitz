@@ -1,9 +1,13 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
+/** Which upstream serves a model. Defaults to "openai" when omitted. */
+export type Provider = "openai" | "speaches";
+
 export interface ModelEntry {
   id: string;
   label: string;
+  provider?: Provider;
 }
 
 export interface ModelsConfig {
@@ -14,8 +18,13 @@ export interface ModelsConfig {
 export interface AppConfig {
   port: number;
   host: string;
-  openaiApiKey: string;
+  /** undefined = OpenAI disabled (fully self-hosted setup) */
+  openaiApiKey?: string;
   openaiBaseUrl: string;
+  /** e.g. http://speaches:8000/v1 – undefined = speaches disabled */
+  speachesBaseUrl?: string;
+  /** Only needed if speaches itself runs with API_KEY set */
+  speachesApiKey?: string;
   /** name -> token */
   tokens: Map<string, string>;
   modelsConfigPath: string;
@@ -31,6 +40,12 @@ try {
   process.loadEnvFile();
 } catch {
   // no .env file – fine
+}
+
+/** Treats unset and empty variables alike (Compose passes "" for empty defaults). */
+function optionalEnv(name: string): string | undefined {
+  const value = process.env[name]?.trim();
+  return value ? value : undefined;
 }
 
 function requireEnv(name: string): string {
@@ -68,8 +83,10 @@ export function loadConfig(): AppConfig {
   return {
     port: Number(process.env.PORT ?? 8790),
     host: process.env.HOST ?? "0.0.0.0",
-    openaiApiKey: requireEnv("OPENAI_API_KEY"),
-    openaiBaseUrl: process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1",
+    openaiApiKey: optionalEnv("OPENAI_API_KEY"),
+    openaiBaseUrl: optionalEnv("OPENAI_BASE_URL") ?? "https://api.openai.com/v1",
+    speachesBaseUrl: optionalEnv("SPEACHES_BASE_URL")?.replace(/\/+$/, ""),
+    speachesApiKey: optionalEnv("SPEACHES_API_KEY"),
     tokens: parseTokens(requireEnv("AUTH_TOKENS")),
     modelsConfigPath: resolve(process.env.MODELS_CONFIG ?? "config/models.json"),
     commandsConfigDir: resolve(process.env.COMMANDS_CONFIG_DIR ?? "config"),
@@ -78,13 +95,44 @@ export function loadConfig(): AppConfig {
   };
 }
 
-export function loadModelsConfig(path: string): ModelsConfig {
+export function providerOf(model: ModelEntry): Provider {
+  return model.provider ?? "openai";
+}
+
+/**
+ * Loads models.json and drops models whose provider is not configured, so one
+ * models.json serves OpenAI-only, speaches-only and mixed deployments.
+ * Returns the dropped model ids for a startup log line.
+ */
+export function loadModelsConfig(
+  path: string,
+  config: AppConfig
+): { modelsConfig: ModelsConfig; dropped: string[] } {
   const parsed = JSON.parse(readFileSync(path, "utf8")) as ModelsConfig;
   if (!Array.isArray(parsed.models) || parsed.models.length === 0) {
     throw new Error(`No models defined in ${path}`);
   }
+  for (const m of parsed.models) {
+    const provider = providerOf(m);
+    if (provider !== "openai" && provider !== "speaches") {
+      throw new Error(`Model "${m.id}" has unknown provider "${provider}"`);
+    }
+  }
   if (!parsed.models.some((m) => m.id === parsed.default)) {
     throw new Error(`Default model "${parsed.default}" is not in the models list`);
   }
-  return parsed;
+
+  const enabled = (m: ModelEntry): boolean =>
+    providerOf(m) === "openai" ? Boolean(config.openaiApiKey) : Boolean(config.speachesBaseUrl);
+  const models = parsed.models.filter(enabled);
+  const dropped = parsed.models.filter((m) => !enabled(m)).map((m) => m.id);
+
+  if (models.length === 0) {
+    throw new Error(
+      `No usable models in ${path}: set OPENAI_API_KEY and/or SPEACHES_BASE_URL for the providers listed there`
+    );
+  }
+  // Default belongs to a disabled provider → fall back to the first usable model.
+  const defaultModel = models.some((m) => m.id === parsed.default) ? parsed.default : models[0].id;
+  return { modelsConfig: { models, default: defaultModel }, dropped };
 }

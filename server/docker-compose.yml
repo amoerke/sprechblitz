@@ -2,14 +2,18 @@ services:
   sprechblitz-server:
     build: .
     container_name: sprechblitz-server
-    restart: no
+    restart: "no"
     ports:
       - "${PORT:-8790}:8790"
     environment:
       # Pflicht – kommen lokal aus server/.env (Compose-Interpolation),
       # im Deployment aus der Plattform (Coolify)
-      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY fehlt}
       AUTH_TOKENS: ${AUTH_TOKENS:?AUTH_TOKENS fehlt (Format name:token,name2:token2)}
+      # Mindestens einer der beiden Anbieter muss gesetzt sein:
+      # OpenAI-Key und/oder SPEACHES_BASE_URL (selbst gehostetes Whisper)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      SPEACHES_BASE_URL: ${SPEACHES_BASE_URL:-}
+      SPEACHES_API_KEY: ${SPEACHES_API_KEY:-}
       # Optional
       OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
       LOG_LEVEL: ${LOG_LEVEL:-info}
@@ -20,3 +24,33 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+
+  # Selbst gehostetes Whisper (https://speaches.ai), nur mit Profil aktiv:
+  #   docker compose --profile speaches up -d
+  # und in .env: SPEACHES_BASE_URL=http://speaches:8000/v1
+  # Kein Port nach außen – erreichbar nur für sprechblitz-server im Compose-Netz.
+  speaches:
+    profiles: ["speaches"]
+    # GPU: SPEACHES_IMAGE=ghcr.io/speaches-ai/speaches:latest-cuda + deploy-Block unten aktivieren
+    image: ${SPEACHES_IMAGE:-ghcr.io/speaches-ai/speaches:latest-cpu}
+    container_name: sprechblitz-speaches
+    restart: unless-stopped
+    environment:
+      ENABLE_UI: "false"
+      # Modelle lädt sprechblitz-server beim Start selbst herunter
+      # (alle "provider": "speaches"-Einträge aus config/models.json).
+      # Nur nötig, wenn speaches von außen erreichbar ist – dann auch SPEACHES_API_KEY
+      # für sprechblitz-server setzen. Nicht leer setzen, sonst lehnt speaches alles ab.
+      # API_KEY: ${SPEACHES_API_KEY}
+    volumes:
+      - speaches-hf-cache:/home/ubuntu/.cache/huggingface/hub
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+volumes:
+  speaches-hf-cache:

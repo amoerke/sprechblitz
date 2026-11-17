@@ -12,7 +12,8 @@ in der UI: **Deutsch** (Kommentare im Rust-/TS-Code sind englisch – Stil beibe
 
 Der Client nimmt per globalem Hotkey über **cpal** auf, resampelt auf 16 kHz Mono-WAV und schickt
 das per Multipart an den eigenen Server. Der Server ist ein **zustandsloser Proxy**: er hält den
-OpenAI-Key, ruft `POST {OPENAI_BASE_URL}/audio/transcriptions` auf, ersetzt optional gesprochene
+OpenAI-Key, ruft je nach Modell `POST {OPENAI_BASE_URL}/audio/transcriptions` oder das selbst
+gehostete Whisper (speaches, `{SPEACHES_BASE_URL}/audio/transcriptions`) auf, ersetzt optional gesprochene
 Befehle („neue Zeile" → `\n`) und gibt `{ text, model }` zurück. Der Client fügt den Text über
 Zwischenablage + simuliertes `Ctrl/⌘+V` an der Cursorposition ein und stellt die alte Zwischenablage
 wieder her. **Der API-Key erreicht den Client nie.**
@@ -88,12 +89,27 @@ Fastify 5, Node ≥ 22, ESM, `tsc` → `dist/`. Port **8790**, Host `0.0.0.0`.
 | Methode | Pfad | Auth | Inhalt |
 |---|---|---|---|
 | GET | `/health` | – | `{ ok: true }` |
-| GET | `/v1/models` | Bearer | Inhalt von `config/models.json` |
+| GET | `/v1/models` | Bearer | `config/models.json`, gefiltert auf konfigurierte Anbieter, nur `id`/`label` |
 | POST | `/v1/transcribe` | Bearer | Multipart `file` + `model`, `language`, `commands` → `{ text, model }` |
 
-**Env** (`.env.example`): `OPENAI_API_KEY`, `AUTH_TOKENS` (Pflicht), optional `PORT`, `HOST`,
-`OPENAI_BASE_URL`, `MODELS_CONFIG`, `COMMANDS_CONFIG_DIR`, `MAX_UPLOAD_BYTES` (30 MB), `LOG_LEVEL`.
+**Env** (`.env.example`): `AUTH_TOKENS` (Pflicht) und mindestens einer der Anbieter:
+`OPENAI_API_KEY` und/oder `SPEACHES_BASE_URL` (z. B. `http://speaches:8000/v1`). Optional
+`SPEACHES_API_KEY`, `PORT`, `HOST`, `OPENAI_BASE_URL`, `MODELS_CONFIG`, `COMMANDS_CONFIG_DIR`,
+`MAX_UPLOAD_BYTES` (30 MB), `PARSE_MODEL`, `LOG_LEVEL`.
 `.env` wird über `process.loadEnvFile()` geladen – Node tut das **nicht** von selbst (`b43a540`).
+
+**Anbieter pro Modell**: Einträge in `models.json` haben optional `"provider": "speaches"`
+(Default `openai`). Modelle eines nicht konfigurierten Anbieters werden beim Start ausgeblendet;
+liegt der Default darunter, wird das erste nutzbare Modell Default. Ohne `OPENAI_API_KEY`
+antworten `/v1/parse-*` mit 503.
+
+**speaches (selbst gehostetes Whisper)**: speaches bedient nur lokal installierte Modelle
+(sonst 404 „not installed locally"). `PRELOAD_MODELS` greift in der aktuellen Version **nicht** –
+deshalb lädt `src/speaches.ts` beim Serverstart alle speaches-Modelle aus `models.json` per
+`POST /v1/models/{id}` nach (Hintergrund, mit Retry). Im Compose-Profil `speaches` läuft der
+Container ohne Port nach außen. CPU-Richtwerte (8 s Audio): `faster-whisper-small` ~3 s,
+`large-v3-turbo` ~12 s – turbo auf CPU ist langsamer als Echtzeit, Client-Timeout ist 120 s.
+**Nur mehrsprachige Modelle eintragen** – `distil-large-v3` u. ä. können kein Deutsch.
 
 **Auth**: `AUTH_TOKENS="name:token,name2:token2"`, mindestens 16 Zeichen pro Token, Vergleich mit
 `timingSafeEqual` gegen *alle* Einträge (kein Early-Return, damit Timing nichts verrät). Ein Mensch
@@ -112,7 +128,8 @@ wird durch Entfernen seines Eintrags gesperrt. Der Token-Name landet im Log.
   ein Client-Update ist dafür nicht nötig.
 
 **Deployment**: Coolify-Application aus dem GitHub-Repo, Base Directory `/server`, Build Pack
-Dockerfile, Env-Vars setzen, Domain zuweisen, Port 8790. Lokal alternativ `docker compose up`.
+Dockerfile, Env-Vars setzen, Domain zuweisen, Port 8790. Lokal alternativ `docker compose up`
+(mit lokalem Whisper: `docker compose --profile speaches up -d` + `SPEACHES_BASE_URL` in `.env`).
 
 ---
 

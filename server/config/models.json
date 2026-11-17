@@ -3,6 +3,8 @@
   "models": [
     { "id": "gpt-4o-mini-transcribe", "label": "GPT-4o mini Transcribe (schnell, günstig)" },
     { "id": "gpt-4o-transcribe", "label": "GPT-4o Transcribe (beste Qualität)" },
-    { "id": "whisper-1", "label": "Whisper v2 (Klassiker)" }
+    { "id": "whisper-1", "label": "Whisper v2 (Klassiker)" },
+    { "id": "deepdml/faster-whisper-large-v3-turbo-ct2", "label": "Whisper large-v3 turbo (lokal)", "provider": "speaches" },
+    { "id": "Systran/faster-whisper-small", "label": "Whisper small (lokal, schnell)", "provider": "speaches" }
   ]
 }

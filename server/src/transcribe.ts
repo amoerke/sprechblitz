@@ -1,5 +1,7 @@
+/** Works against any OpenAI-compatible /audio/transcriptions endpoint (OpenAI, speaches). */
 export interface TranscribeOptions {
-  apiKey: string;
+  /** Omitted for upstreams without auth (e.g. speaches without API_KEY) */
+  apiKey?: string;
   baseUrl: string;
   model: string;
   /** ISO-639-1 code, undefined = auto-detect */
@@ -14,7 +16,7 @@ export class UpstreamError extends Error {
     public readonly status: number,
     public readonly body: string
   ) {
-    super(`OpenAI transcription failed with status ${status}`);
+    super(`Transcription upstream failed with status ${status}`);
   }
 }
 
@@ -33,7 +35,7 @@ export async function transcribe(options: TranscribeOptions): Promise<string> {
 
   const response = await fetch(`${options.baseUrl}/audio/transcriptions`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${options.apiKey}` },
+    headers: options.apiKey ? { Authorization: `Bearer ${options.apiKey}` } : {},
     body: form,
   });
 
