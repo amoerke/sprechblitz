@@ -9,10 +9,11 @@ services:
       # Pflicht – kommen lokal aus server/.env (Compose-Interpolation),
       # im Deployment aus der Plattform (Coolify)
       AUTH_TOKENS: ${AUTH_TOKENS:?AUTH_TOKENS fehlt (Format name:token,name2:token2)}
-      # Mindestens einer der beiden Anbieter muss gesetzt sein:
-      # OpenAI-Key und/oder SPEACHES_BASE_URL (selbst gehostetes Whisper)
+      # Anbieter: OpenAI (Key) und/oder das speaches-Service unten.
+      # SPEACHES_BASE_URL zeigt per Default auf den speaches-Service im selben Stack;
+      # explizit leer setzen (SPEACHES_BASE_URL=) schaltet die lokalen Modelle ab.
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      SPEACHES_BASE_URL: ${SPEACHES_BASE_URL:-}
+      SPEACHES_BASE_URL: ${SPEACHES_BASE_URL-http://speaches:8000/v1}
       SPEACHES_API_KEY: ${SPEACHES_API_KEY:-}
       # Optional
       OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
@@ -25,12 +26,10 @@ services:
       retries: 3
       start_period: 10s
 
-  # Selbst gehostetes Whisper (https://speaches.ai), nur mit Profil aktiv:
-  #   docker compose --profile speaches up -d
-  # und in .env: SPEACHES_BASE_URL=http://speaches:8000/v1
+  # Selbst gehostetes Whisper (https://speaches.ai). Bewusst ohne Compose-Profil:
+  # Coolify startet keine Services mit Profil, speaches liefe dort sonst nie.
   # Kein Port nach außen – erreichbar nur für sprechblitz-server im Compose-Netz.
   speaches:
-    profiles: ["speaches"]
     # GPU: SPEACHES_IMAGE=ghcr.io/speaches-ai/speaches:latest-cuda + deploy-Block unten aktivieren
     image: ${SPEACHES_IMAGE:-ghcr.io/speaches-ai/speaches:latest-cpu}
     container_name: sprechblitz-speaches

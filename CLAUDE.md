@@ -106,8 +106,11 @@ antworten `/v1/parse-*` mit 503.
 **speaches (selbst gehostetes Whisper)**: speaches bedient nur lokal installierte Modelle
 (sonst 404 „not installed locally"). `PRELOAD_MODELS` greift in der aktuellen Version **nicht** –
 deshalb lädt `src/speaches.ts` beim Serverstart alle speaches-Modelle aus `models.json` per
-`POST /v1/models/{id}` nach (Hintergrund, mit Retry). Im Compose-Profil `speaches` läuft der
-Container ohne Port nach außen. CPU-Richtwerte (8 s Audio): `faster-whisper-small` ~3 s,
+`POST /v1/models/{id}` nach (Hintergrund, mit Retry). speaches ist ein normaler Service in
+`docker-compose.yml` ohne Port nach außen, **bewusst ohne Compose-Profil** – Coolify startet
+Services mit Profil nicht (Server lief dann mit `EAI_AGAIN speaches`). `SPEACHES_BASE_URL`
+steht dort per Default auf `http://speaches:8000/v1` (Service-Name, nicht Container-Name –
+Coolify benennt Container um); explizit leer = lokale Modelle aus. CPU-Richtwerte (8 s Audio): `faster-whisper-small` ~3 s,
 `large-v3-turbo` ~12 s – turbo auf CPU ist langsamer als Echtzeit, Client-Timeout ist 120 s.
 **Nur mehrsprachige Modelle eintragen** – `distil-large-v3` u. ä. können kein Deutsch.
 
@@ -128,8 +131,8 @@ wird durch Entfernen seines Eintrags gesperrt. Der Token-Name landet im Log.
   ein Client-Update ist dafür nicht nötig.
 
 **Deployment**: Coolify-Application aus dem GitHub-Repo, Base Directory `/server`, Build Pack
-Dockerfile, Env-Vars setzen, Domain zuweisen, Port 8790. Lokal alternativ `docker compose up`
-(mit lokalem Whisper: `docker compose --profile speaches up -d` + `SPEACHES_BASE_URL` in `.env`).
+**Docker Compose** (startet Server + speaches), Env-Vars setzen, Domain zuweisen, Port 8790.
+Lokal genauso `docker compose up -d`.
 
 ---
 

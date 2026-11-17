@@ -51,19 +51,23 @@ Modelle mit `"provider": "speaches"` in `config/models.json` laufen über [speac
 
 Der Server lädt beim Start alle speaches-Modelle aus `models.json` automatisch herunter (`POST /v1/models/{id}`, im Hintergrund). Bis ein Modell fertig ist, schlagen Transkriptionen damit fehl. Der Fortschritt steht im Log (`speaches: model ready`).
 
-### Lokal mit Docker Compose
+### Mit Docker Compose (lokal und in Coolify)
+
+`docker-compose.yml` startet speaches immer mit, und `SPEACHES_BASE_URL` zeigt per Default auf `http://speaches:8000/v1`. Es ist nichts weiter einzustellen:
 
 ```sh
-# .env: SPEACHES_BASE_URL=http://speaches:8000/v1
-docker compose --profile speaches up -d
+docker compose up -d
 ```
+
+In Coolify genauso: Ressource mit Build Pack **Docker Compose** aus `/server`. Ein Compose-Profil wäre hier keine Option, weil Coolify Services mit Profil nicht startet.
 
 speaches bekommt keinen Port nach außen und ist nur für den SprechBlitz-Server im Compose-Netz erreichbar. Die Modelle liegen im Volume `speaches-hf-cache`. Für GPU: `SPEACHES_IMAGE=ghcr.io/speaches-ai/speaches:latest-cuda` setzen und den `deploy`-Block in `docker-compose.yml` einkommentieren.
 
-### In Coolify
+Ohne lokales Whisper: `SPEACHES_BASE_URL=` explizit leer setzen. Dann blendet der Server die lokalen Modelle aus; der speaches-Container läuft trotzdem mit, verbraucht im Leerlauf aber kaum Ressourcen.
 
-1. speaches als eigene Ressource anlegen (Docker Image `ghcr.io/speaches-ai/speaches:latest-cpu` bzw. `latest-cuda`, Port 8000, Env `ENABLE_UI=false`, persistentes Volume auf `/home/ubuntu/.cache/huggingface/hub`).
-2. Am besten **ohne Domain**, nur im internen Coolify-Netz – dann beim SprechBlitz-Server `SPEACHES_BASE_URL=http://<interner-hostname>:8000/v1` setzen. Bekommt speaches eine öffentliche Domain, unbedingt `API_KEY` setzen und denselben Wert als `SPEACHES_API_KEY` beim SprechBlitz-Server eintragen.
+### speaches separat betreiben
+
+Läuft speaches woanders (eigene Coolify-Ressource, anderer Host), `SPEACHES_BASE_URL` auf dessen Adresse setzen. Bekommt speaches eine öffentliche Domain, unbedingt `API_KEY` setzen und denselben Wert als `SPEACHES_API_KEY` beim SprechBlitz-Server eintragen.
 
 ### Modellwahl
 
