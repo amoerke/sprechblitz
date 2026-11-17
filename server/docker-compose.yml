@@ -2,7 +2,7 @@ services:
   sprechblitz-server:
     build: .
     container_name: sprechblitz-server
-    restart: unless-stopped
+    restart: no
     ports:
       - "${PORT:-8790}:8790"
     environment:
